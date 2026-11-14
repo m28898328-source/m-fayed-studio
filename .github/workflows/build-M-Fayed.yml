@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -29,15 +29,19 @@ jobs:
           PROJECT_DIR=$(find extracted -name package.json | head -n 1 | xargs dirname)
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
-      - name: Prepare App Icon
+      - name: Prepare New Icon
         run: |
           mkdir -p "$PROJECT_DIR/assets"
+
           ICON=$(find . -maxdepth 1 -type f -iname 'icon*' ! -name '*.zip' | head -n 1)
+
           if [ -z "$ICON" ]; then
             echo "Icon not found"
             exit 1
           fi
+
           cp "$ICON" "$PROJECT_DIR/assets/icon-only.png"
+          cp "$ICON" "$PROJECT_DIR/assets/icon-foreground.png"
 
       - name: Install Dependencies
         working-directory: ${{ env.PROJECT_DIR }}
@@ -47,13 +51,13 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: npm install --save-dev @capacitor/assets
 
+      - name: Generate Icons
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npx capacitor-assets generate --android
+
       - name: Setup Android
         working-directory: ${{ env.PROJECT_DIR }}
         run: npx cap add android
-
-      - name: Generate App Icons
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: npx capacitor-assets generate --android
 
       - name: Sync Android
         working-directory: ${{ env.PROJECT_DIR }}
