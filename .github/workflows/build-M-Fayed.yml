@@ -1,6 +1,7 @@
-name: Build M-Fayed Studio APK
+name: Build M-Fayed Studio 3.3 APK
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,28 +23,51 @@ jobs:
           java-version: 17
 
       - name: Extract Project
+        shell: bash
         run: |
-          mkdir extracted
-          ZIP_FILE=$(find . -maxdepth 1 -name '*.zip' | head -n 1)
+          mkdir -p extracted
+
+          ZIP_FILE=$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ZIP file not found"
+            exit 1
+          fi
+
           unzip -q "$ZIP_FILE" -d extracted
-          PROJECT_DIR=$(find extracted -name package.json | head -n 1 | xargs dirname)
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+
+          PACKAGE_FILE=$(find extracted -type f -name package.json | head -n 1)
+
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "package.json not found"
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$PACKAGE_FILE")
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
+          echo "Project found: $PROJECT_DIR"
 
       - name: Install Dependencies
         working-directory: ${{ env.PROJECT_DIR }}
         run: npm install
 
-      - name: Install Icon Generator
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: npm install --save-dev @capacitor/assets
-
-      - name: Generate Icons
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: npx capacitor-assets generate --android
-
       - name: Setup Android
         working-directory: ${{ env.PROJECT_DIR }}
         run: npx cap add android
+
+      - name: Install Native Plugin and Icons
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          D=android/app/src/main/java/com/mfayed/studio
+          mkdir -p "$D"
+
+          cp native/*.java "$D/"
+
+          cp -r icons-res/* android/app/src/main/res/
+
+          sed -i 's#<application#<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />\n    <application#' android/app/src/main/AndroidManifest.xml
 
       - name: Sync Android
         working-directory: ${{ env.PROJECT_DIR }}
@@ -58,5 +82,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: M-Fayed-Studio-APK
+          name: M-Fayed-Studio-3.3
           path: ${{ env.PROJECT_DIR }}/android/app/build/outputs/apk/debug/app-debug.apk
