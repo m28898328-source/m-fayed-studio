@@ -27,7 +27,7 @@ jobs:
           ZIP_FILE=$(find . -maxdepth 1 -name '*.zip' | head -n 1)
           unzip -q "$ZIP_FILE" -d extracted
           PROJECT_DIR=$(find extracted -name package.json | head -n 1 | xargs dirname)
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_EN
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
       - name: Install Dependencies
         working-directory: ${{ env.PROJECT_DIR }}
