@@ -1,4 +1,4 @@
-name: Build M-Fayed Studio 3.3 APK
+name: Build M-Fayed Studio 3.3
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir -p extracted
 
-          ZIP_FILE=$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
 
           if [ -z "$ZIP_FILE" ]; then
             echo "ZIP file not found"
@@ -47,7 +47,7 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-          echo "Project found: $PROJECT_DIR"
+          echo "Building project: $PROJECT_DIR"
 
       - name: Install Dependencies
         working-directory: ${{ env.PROJECT_DIR }}
@@ -60,14 +60,12 @@ jobs:
       - name: Install Native Plugin and Icons
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          D=android/app/src/main/java/com/mfayed/studio
-          mkdir -p "$D"
+          JAVA_DIR=android/app/src/main/java/com/mfayed/studio
+          mkdir -p "$JAVA_DIR"
 
-          cp native/*.java "$D/"
+          cp native/*.java "$JAVA_DIR/"
 
           cp -r icons-res/* android/app/src/main/res/
-
-          sed -i 's#<application#<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />\n    <application#' android/app/src/main/AndroidManifest.xml
 
       - name: Sync Android
         working-directory: ${{ env.PROJECT_DIR }}
