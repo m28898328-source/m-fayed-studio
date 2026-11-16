@@ -27,21 +27,7 @@ jobs:
           ZIP_FILE=$(find . -maxdepth 1 -name '*.zip' | head -n 1)
           unzip -q "$ZIP_FILE" -d extracted
           PROJECT_DIR=$(find extracted -name package.json | head -n 1 | xargs dirname)
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-
-      - name: Prepare New Icon
-        run: |
-          mkdir -p "$PROJECT_DIR/assets"
-
-          ICON=$(find . -maxdepth 1 -type f -iname 'icon*' ! -name '*.zip' | head -n 1)
-
-          if [ -z "$ICON" ]; then
-            echo "Icon not found"
-            exit 1
-          fi
-
-          cp "$ICON" "$PROJECT_DIR/assets/icon-only.png"
-          cp "$ICON" "$PROJECT_DIR/assets/icon-foreground.png"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_EN
 
       - name: Install Dependencies
         working-directory: ${{ env.PROJECT_DIR }}
